@@ -478,27 +478,6 @@ ${firstMessageExcerpt ? `开场白摘要: ${firstMessageExcerpt.slice(0, 300)}` 
 });
 
 /**
- * AI Name Generator prompt.
- * Generates creative character name candidates for the user to choose from.
- */
-export const NAME_GENERATOR_PROMPT = (hint: string, genre: string) => ({
-  system: `你是一位富有创意的角色命名专家。根据用户提供的提示，生成多个风格多样的角色名候选。
-
-规则：
-- 生成 8 个候选名字
-- 每个名字简短有力（2-4个字或1-3个英文单词）
-- 风格多样化：古典、现代、幻想、写实、中性等不同风格混搭
-- 名字要有辨识度和记忆点
-- 如果用户给了类型/风格提示，优先匹配该风格，但仍保留一些出其不意的选择
-
-返回 JSON 数组：[{"name": "名字", "style": "风格标签"}]`,
-  user: `${hint ? `角色提示：${hint}` : '请自由发挥，生成适合奇幻/现代/科幻等多种风格的角色名'}
-${genre ? `卡片标签：${genre}` : ''}
-
-请生成 8 个候选名字。只输出 JSON 数组。`,
-});
-
-/**
  * Card Translation prompt.
  * Translates all text fields of a character card between Chinese and English.
  */

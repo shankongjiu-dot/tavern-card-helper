@@ -18,7 +18,6 @@ import {
   ORGANIZE_ENTRIES_PROMPT,
   GENERATE_KEYS_PROMPT,
   MVU_VARIABLES_PROMPT,
-  NAME_GENERATOR_PROMPT,
   TRANSLATE_CARD_PROMPT,
   CARD_DIAGNOSIS_PROMPT,
   parseAIJson,
@@ -285,17 +284,6 @@ export function useAIGenerate() {
   }, []);
 
   /**
-   * Generate character name candidates using AI.
-   * Returns an array of { name, style } objects.
-   */
-  const generateNames = useCallback(async (hint: string, genre: string) => {
-    const prompts = NAME_GENERATOR_PROMPT(hint, genre);
-    const text = await callAIWithPrompt(prompts.system, prompts.user, { temperature: 1.0, max_tokens: 1500 });
-    const parsed = parseAIJson(text) as Array<{ name: string; style: string }> | null;
-    return parsed || [];
-  }, []);
-
-  /**
    * Translate a character card's text fields between Chinese and English.
    * @param cardData - The card's data object containing text fields
    * @param targetLang - 'zh' for Chinese, 'en' for English
@@ -405,7 +393,6 @@ export function useAIGenerate() {
     generateEntryKeys,
     generateMvuVariables,
     expandLorebookEntry,
-    generateNames,
     translateCard,
     diagnoseCard,
   };
