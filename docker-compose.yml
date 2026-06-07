@@ -1,0 +1,12 @@
+services:
+  tavern-card-helper:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      # 如需限制访问域名，取消注释并填写：
+      # - CORS_ORIGINS=https://your-domain.com
+    restart: unless-stopped

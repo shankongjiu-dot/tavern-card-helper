@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+*.md
+*.bat
+*.vbs
+.vscode
+.idea

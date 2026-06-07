@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+/* Custom global styles for Tavern Card Helper */
+:root {
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-border: #334155;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-accent: #a78bfa;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  
+  /* Theme variables - controlled by ThemeSettings */
+  --surface-opacity: 0.7;
+  --blur-intensity: 12px;
+  --bg-overlay-opacity: 0.9;
+  --text-color: #f1f5f9;
+  --text-shadow: none;
+  --card-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  --input-bg: #0f172a;
+  --input-border: #475569;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  text-shadow: var(--text-shadow);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(99, 102, 241, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Glass effect for sidebar - uses theme variables */
+.glass-sidebar {
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, calc(var(--surface-opacity) * 1.05)) 0%,
+    rgba(15, 23, 42, var(--surface-opacity)) 100%
+  );
+  backdrop-filter: blur(var(--blur-intensity));
+  border-right: 1px solid rgba(99, 102, 241, 0.08);
+  box-shadow: var(--card-shadow), inset -1px 0 0 rgba(148, 163, 184, 0.04);
+}
+
+/* Glass effect for cards */
+.glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, var(--surface-opacity)) 0%,
+    rgba(30, 41, 59, calc(var(--surface-opacity) * 0.9)) 100%
+  );
+  backdrop-filter: blur(var(--blur-intensity));
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: var(--card-shadow), 0 0 20px rgba(99, 102, 241, 0.06);
+}
+
+/* Card backgrounds using theme opacity */
+.card-surface {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, var(--surface-opacity)) 0%,
+    rgba(30, 41, 59, calc(var(--surface-opacity) * 0.92)) 100%
+  );
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card-surface:hover {
+  box-shadow: var(--card-shadow), 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Apply card shadow and lift to bordered cards */
+.rounded-xl.border {
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+}
+
+/* Subtle glow effect for primary elements */
+.glow-primary {
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.25);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Text color utility */
+.text-themed {
+  color: var(--text-color);
+  text-shadow: var(--text-shadow);
+}
+
+/* Sidebar nav item hover transition */
+aside nav a {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+aside nav a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  background: var(--color-primary);
+  border-radius: 0 3px 3px 0;
+  transition: transform 0.2s ease;
+}
+
+aside nav a:hover::before {
+  transform: translateY(-50%) scaleY(0.5);
+}
+
+aside nav a[aria-current="page"]::before,
+aside nav a.active::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+/* Page transition animation removed — was causing React DOM reconciliation errors.
+   Transitions are now handled at the component level via key-based re-mounting. */
+
+/* Button press effect */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Card hover lift */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow), 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+/*
+ * Force theme text color on all text elements.
+ * Overrides Tailwind's hardcoded text-slate-* and text-white classes.
+ */
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6,
+main p,
+main span,
+main div,
+main label,
+main li,
+main td,
+main th,
+main a,
+aside p,
+aside span,
+aside div:not(.relative) {
+  color: var(--text-color);
+  text-shadow: var(--text-shadow);
+}
+
+/* Preserve muted text colors for secondary content */
+main .text-slate-500,
+main .text-slate-600,
+main .text-slate-400,
+aside .text-slate-500,
+aside .text-slate-600 {
+  color: color-mix(in srgb, var(--text-color) 60%, transparent);
+}
+
+/* Preserve placeholder colors */
+main ::placeholder,
+main .placeholder-slate-500 {
+  color: color-mix(in srgb, var(--text-color) 40%, transparent);
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-track {
+  height: 6px;
+  background: #334155;
+  border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  margin-top: -4px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Input field theme styling - using attribute selectors for higher specificity */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+textarea,
+select {
+  background-color: var(--input-bg, #0f172a) !important;
+  border-color: var(--input-border, #475569) !important;
+  border-width: 1px !important;
+  color: var(--text-color, #f1f5f9);
+}
+
+/* Remove border and background from inputs inside tag input containers */
+.flex.flex-wrap.gap-1\.5 > input,
+.flex.flex-wrap > input {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+.flex.flex-wrap.gap-1\.5 > input:focus,
+.flex.flex-wrap > input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+/* Light background text color adjustment */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+textarea,
+select {
+  --is-light-bg: 0;
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary, #6366f1) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+/* Auto text color for light backgrounds */
+.input-light-text {
+  color: #1e293b !important;
+}
