@@ -263,7 +263,7 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
   const handleGenerateKeys = async () => {
     const needsKeys = entries
       .map((e, i) => ({ entry: e, index: i }))
-      .filter(({ entry }) => entry.content.trim() && entry.keys.length < 2);
+      .filter(({ entry }) => entry.content?.trim() && entry.keys.length < 2);
     if (needsKeys.length === 0) return;
 
     setGeneratingKeys(true);
@@ -295,7 +295,7 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
   };
 
   const cleanupEmptyEntries = () => {
-    const updated = entries.filter(e => e.content.trim() || e.name.trim() || e.keys.length > 0);
+    const updated = entries.filter(e => e.content?.trim() || e.name?.trim() || e.keys.length > 0);
     onUpdate(updated);
     addToast('success', `已清理 ${entries.length - updated.length} 个空条目`);
   };

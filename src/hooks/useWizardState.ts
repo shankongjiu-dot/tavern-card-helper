@@ -123,7 +123,7 @@ export function useWizardState(editId?: number) {
         // Optional, but if entries exist they must be valid
         for (const entry of draft.lorebookEntries) {
           // Constant entries don't need keys; keyword entries need at least one
-          if (!entry.constant && entry.keys.length === 0 && entry.content.trim()) {
+          if (!entry.constant && entry.keys.length === 0 && entry.content?.trim()) {
             return '每个关键词触发条目需要至少一个触发关键词';
           }
         }

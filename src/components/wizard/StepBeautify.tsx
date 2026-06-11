@@ -62,8 +62,8 @@ export function StepBeautify({
   const [validationIssues, setValidationIssues] = useState<MvuIssue[] | null>(null);
   const [aiCorrectionLoading, setAiCorrectionLoading] = useState(false);
   const [aiCorrections, setAiCorrections] = useState<Array<{ path: string; action: string; reason: string; suggestion: Record<string, unknown> }> | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [appliedAi, setAppliedAI] = useState<Set<number>>(new Set());
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const [appliedSet, setAppliedSet] = useState<Set<number>>(new Set());
   const [customBarLoading, setCustomBarLoading] = useState(false);
   const [customBarError, setCustomBarError] = useState<string | null>(null);
   const { generateMvuVariables, correctMvuConfig, generateCustomStatusBar } = useAIGenerate();
@@ -189,10 +189,10 @@ export function StepBeautify({
     const issues = validateMvuConfig(mvu);
     setValidationIssues(issues);
     setAiCorrections(null);
-    setAppliedAI(new Set());
+    setAppliedSet(new Set());
     // Auto-expand all categories with errors
     const cats = new Set(issues.filter(i => i.severity === 'error').map(i => i.category));
-    setExpandedCategories(cats);
+    setExpandedCats(cats);
   }, [mvu]);
 
   const handleAutoFix = useCallback(() => {
@@ -209,32 +209,32 @@ export function StepBeautify({
   }, [mvu, onChange]);
 
   const handleApplyAiCorrection = useCallback((index: number) => {
-    if (!aiCorrections || appliedAI.has(index)) return;
+    if (!aiCorrections || appliedSet.has(index)) return;
     const correction = aiCorrections[index];
     const fixed = applyAiCorrection(mvu, correction);
     onChange(fixed);
-    setAppliedAI(prev => new Set([...prev, index]));
+    setAppliedSet(prev => new Set([...prev, index]));
     // Re-validate after applying
     setValidationIssues(validateMvuConfig(fixed));
-  }, [mvu, aiCorrections, appliedAI, onChange]);
+  }, [mvu, aiCorrections, appliedSet, onChange]);
 
   const handleApplyAllAiCorrections = useCallback(() => {
     if (!aiCorrections) return;
     let config = mvu;
     const newApplied = new Set<number>();
     aiCorrections.forEach((c, i) => {
-      if (!appliedAI.has(i)) {
+      if (!appliedSet.has(i)) {
         config = applyAiCorrection(config, c);
         newApplied.add(i);
       }
     });
     onChange(config);
-    setAppliedAI(prev => new Set([...prev, ...newApplied]));
+    setAppliedSet(prev => new Set([...prev, ...newApplied]));
     setValidationIssues(validateMvuConfig(config));
-  }, [mvu, aiCorrections, appliedAI, onChange]);
+  }, [mvu, aiCorrections, appliedSet, onChange]);
 
   const toggleCategory = useCallback((cat: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCats(prev => {
       const next = new Set(prev);
       if (next.has(cat)) next.delete(cat); else next.add(cat);
       return next;
@@ -410,19 +410,19 @@ export function StepBeautify({
                   <p className="text-xs text-slate-400">{summarizeIssues(validationIssues)}</p>
                   {validationIssues.length > 0 && (
                     <button
-                      onClick={() => setExpandedCategories(
-                        expandedCategories.size > 0 ? new Set() : new Set(validationIssues.map(i => i.category))
+                      onClick={() => setExpandedCats(
+                        expandedCats.size > 0 ? new Set() : new Set(validationIssues.map(i => i.category))
                       )}
                       className="text-[10px] text-slate-500 hover:text-slate-300"
                     >
-                      {expandedCategories.size > 0 ? '全部折叠' : '全部展开'}
+                      {expandedCats.size > 0 ? '全部折叠' : '全部展开'}
                     </button>
                   )}
                 </div>
                 {validationIssues.length > 0 && (
                   <div className="max-h-[320px] overflow-y-auto space-y-1.5">
                     {groupIssuesByCategory(validationIssues).map(group => {
-                      const isExpanded = expandedCategories.has(group.category);
+                      const isExpanded = expandedCats.has(group.category);
                       const hasErrors = group.issues.some(i => i.severity === 'error');
                       const hasWarnings = group.issues.some(i => i.severity === 'warning');
                       const fixableCount = group.issues.filter(i => i.autoFixable).length;
@@ -501,17 +501,17 @@ export function StepBeautify({
                   {aiCorrections.length > 0 && (
                     <button
                       onClick={handleApplyAllAiCorrections}
-                      disabled={appliedAi.size >= aiCorrections.length}
+                      disabled={appliedSet.size >= aiCorrections.length}
                       className="text-[10px] px-2 py-1 rounded bg-violet-800/40 text-violet-200 hover:bg-violet-700/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {appliedAi.size >= aiCorrections.length ? '✅ 已全部应用' : `应用全部 (${aiCorrections.length - appliedAi.size})`}
+                      {appliedSet.size >= aiCorrections.length ? '✅ 已全部应用' : `应用全部 (${aiCorrections.length - appliedSet.size})`}
                     </button>
                   )}
                 </div>
                 {aiCorrections.length > 0 && (
                   <div className="max-h-[280px] overflow-y-auto space-y-1.5">
                     {aiCorrections.map((c, i) => {
-                      const isApplied = appliedAi.has(i);
+                      const isApplied = appliedSet.has(i);
                       return (
                         <div
                           key={i}

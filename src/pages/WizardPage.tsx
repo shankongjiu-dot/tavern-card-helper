@@ -144,7 +144,7 @@ export function WizardPage() {
   // World book summary for MVU prompts
   const worldbookSummary = draft.lorebookEntries
     .filter(e => e.name)
-    .map(e => `${e.name}: ${e.content.slice(0, 80)}`)
+    .map(e => `${e.name}: ${(e.content || '').slice(0, 80)}`)
     .join('\n');
 
   const worldbookContext = draft.lorebookEntries
@@ -153,7 +153,7 @@ export function WizardPage() {
 触发词: ${(e.keys || []).join('、') || '(无)'}
 类型: ${e.constant ? '常驻' : '触发'} · 位置: ${e.position} · 优先级: ${e.priority}
 内容:
-${e.content}`)
+${e.content || ''}`)
     .join('\n\n---\n\n');
 
   /** Sync character data to world book entries and update draft */

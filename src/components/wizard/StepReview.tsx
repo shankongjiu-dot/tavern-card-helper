@@ -45,13 +45,13 @@ export function StepReview({ draft }: StepReviewProps) {
   const enabledEntries = draft.lorebookEntries.filter(e => e.enabled !== false);
   const constantEntries = enabledEntries.filter(e => e.constant);
   const triggerEntries = enabledEntries.filter(e => !e.constant);
-  const emptyEntries = draft.lorebookEntries.filter(e => !e.content.trim());
+  const emptyEntries = draft.lorebookEntries.filter(e => !e.content?.trim());
   const noKeyEntries = triggerEntries.filter(e => e.keys.length === 0);
   const neverTriggerEntries = enabledEntries.filter(e => e.probability === 0);
   const worldbookTokens = draft.lorebookEntries.reduce((sum, e) => sum + estimateTokens(e.content), 0);
   const constantTokens = constantEntries.reduce((sum, e) => sum + estimateTokens(e.content), 0);
   const longestEntry = draft.lorebookEntries.reduce((max, entry) =>
-    entry.content.length > max.content.length ? entry : max,
+    (entry.content || '').length > max.content.length ? entry : max,
     { name: '', content: '' } as { name: string; content: string },
   );
   const jsonString = JSON.stringify(
@@ -111,7 +111,7 @@ export function StepReview({ draft }: StepReviewProps) {
       <div className="rounded-xl border border-cyan-700/40 bg-cyan-950/20 p-5 mb-4">
         <h3 className="text-sm font-semibold text-cyan-300 mb-3">卡片统计</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <Stat label="角色" value={draft.characters.filter(c => c.name.trim()).length} />
+          <Stat label="角色" value={draft.characters.filter(c => c.name?.trim()).length} />
           <Stat label="世界书" value={draft.lorebookEntries.length} />
           <Stat label="启用条目" value={enabledEntries.length} />
           <Stat label="常驻条目" value={constantEntries.length} />
