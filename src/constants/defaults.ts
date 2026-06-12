@@ -49,14 +49,29 @@ export interface LorebookEntry {
   ignore_budget: boolean;
 }
 
-/** Wizard character (Step 2) — simplified: name + description only */
+/** Wizard character (Step 2) — simplified: name + description + optional alignment */
 export interface WizardCharacter {
   id: string;
   name: string;
   description: string;
+  /** Optional D&D-style moral alignment constraint for AI generation */
+  alignment?: string;
   /** IDs of world book entries auto-generated from this character */
   entryIds?: string[];
 }
+
+/** D&D nine-grid alignment options (optional personality constraint) */
+export const CHARACTER_ALIGNMENTS = [
+  { value: '守序善良', label: '守序善良', desc: '恪守正义与秩序，为公义而行' },
+  { value: '中立善良', label: '中立善良', desc: '心存善念，不拘泥于规则' },
+  { value: '混乱善良', label: '混乱善良', desc: '以良知行事，蔑视不义的秩序' },
+  { value: '守序中立', label: '守序中立', desc: '信奉秩序与纪律，不偏善恶' },
+  { value: '绝对中立', label: '绝对中立', desc: '不偏不倚，顺其自然' },
+  { value: '混乱中立', label: '混乱中立', desc: '追求自由，随心所欲' },
+  { value: '守序邪恶', label: '守序邪恶', desc: '利用规则与体制谋取私利' },
+  { value: '中立邪恶', label: '中立邪恶', desc: '不择手段，唯利是图' },
+  { value: '混乱邪恶', label: '混乱邪恶', desc: '以破坏和混乱为乐' },
+] as const;
 
 /** AI parsed result for character generation (simplified) */
 export interface AIGeneratedCharacter {

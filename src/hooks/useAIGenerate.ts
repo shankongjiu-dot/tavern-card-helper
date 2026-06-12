@@ -85,8 +85,9 @@ export function useAIGenerate() {
     characterName: string,
     hint: string,
     otherCharactersContext?: string,
+    alignment?: string,
   ): Promise<string> => {
-    const prompts = CHARACTER_GENERATE_PROMPT(characterName, hint, otherCharactersContext);
+    const prompts = CHARACTER_GENERATE_PROMPT(characterName, hint, otherCharactersContext, alignment);
     return callAIWithPrompt(prompts.system, prompts.user, { temperature: 0.85, max_tokens: 4000, presetMode: 'force' });
   }, []);
 
@@ -100,8 +101,9 @@ export function useAIGenerate() {
     hint: string,
     onChunk: StreamCallback,
     otherCharactersContext?: string,
+    alignment?: string,
   ): Promise<string> => {
-    const prompts = CHARACTER_GENERATE_PROMPT(characterName, hint, otherCharactersContext);
+    const prompts = CHARACTER_GENERATE_PROMPT(characterName, hint, otherCharactersContext, alignment);
     return callAIWithPromptStreaming(prompts.system, prompts.user, onChunk, { temperature: 0.85, max_tokens: 4000, presetMode: 'force' });
   }, []);
 
@@ -113,8 +115,9 @@ export function useAIGenerate() {
     characterName: string,
     hint: string,
     otherCharactersContext?: string,
+    alignment?: string,
   ) => {
-    const text = await generateCharacter(characterName, hint, otherCharactersContext);
+    const text = await generateCharacter(characterName, hint, otherCharactersContext, alignment);
     const parsed = parseAIJson(text) as AIGeneratedCharacter | null;
 
     if (!parsed) return { description: text };
@@ -134,8 +137,9 @@ export function useAIGenerate() {
     hint: string,
     onChunk: StreamCallback,
     otherCharactersContext?: string,
+    alignment?: string,
   ) => {
-    const text = await generateCharacterStreaming(characterName, hint, onChunk, otherCharactersContext);
+    const text = await generateCharacterStreaming(characterName, hint, onChunk, otherCharactersContext, alignment);
     const parsed = parseAIJson(text) as AIGeneratedCharacter | null;
 
     if (!parsed) return { description: text };

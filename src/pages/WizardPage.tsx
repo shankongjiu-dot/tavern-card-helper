@@ -272,6 +272,7 @@ ${e.content || ''}`)
         hint,
         () => {},
         otherCharsContext || undefined,
+        char.alignment || undefined,
       );
       if (typeof result === 'object' && result !== null) {
         const parsed = result as Record<string, unknown>;
@@ -354,6 +355,7 @@ ${e.content || ''}`)
             hint,
             () => {},
             otherCharsContext || undefined,
+            char.alignment || undefined,
           );
 
           console.log(`[批量生成] 角色 ${char.name} 生成完成, result type:`, typeof result, result ? 'truthy' : 'falsy');

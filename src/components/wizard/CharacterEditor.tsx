@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { TextInput } from '../shared/TextInput';
 import { TextArea } from '../shared/TextArea';
 import { Button } from '../shared/Button';
+import { CHARACTER_ALIGNMENTS } from '../../constants/defaults';
 import type { WizardCharacter } from '../../constants/defaults';
 import type { CharacterVersion } from '../../pages/WizardPage';
 
@@ -138,6 +139,39 @@ export function CharacterEditor({
         onBlur={(e) => onUpdate({ name: e.target.value })}
         placeholder="输入角色名称"
       />
+
+      {/* Alignment selector (optional D&D nine-grid) */}
+      <div>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          人格阵营 <span className="text-slate-600">（可选，约束 AI 生成的人格倾向）</span>
+        </label>
+        <div className="grid grid-cols-3 gap-1.5">
+          <button
+            onClick={() => onUpdate({ alignment: undefined })}
+            className={`text-[11px] py-1.5 px-2 rounded border transition-colors ${
+              !character.alignment
+                ? 'border-slate-500 bg-slate-700/60 text-slate-200'
+                : 'border-slate-700 text-slate-500 hover:border-slate-600 hover:text-slate-400'
+            }`}
+          >
+            不设定
+          </button>
+          {CHARACTER_ALIGNMENTS.map((a) => (
+            <button
+              key={a.value}
+              onClick={() => onUpdate({ alignment: a.value })}
+              title={a.desc}
+              className={`text-[11px] py-1.5 px-2 rounded border transition-colors ${
+                character.alignment === a.value
+                  ? 'border-indigo-500 bg-indigo-900/40 text-indigo-200'
+                  : 'border-slate-700 text-slate-500 hover:border-slate-600 hover:text-slate-400'
+              }`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <TextArea
