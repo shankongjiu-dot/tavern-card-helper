@@ -375,14 +375,12 @@ ${e.content || ''}`)
   };
 
   // ── Partial modification of character description ──────────────────
-  const handleModifyCharacter = async (index: number, instructions: string) => {
+  const handleModifyCharacter = async (index: number, instructions: string, currentDescription: string) => {
     const char = draft.characters[index];
-    if (!char?.name?.trim() || !char.description?.trim()) return;
+    if (!char?.name?.trim() || !currentDescription?.trim()) return;
 
     setModifyingIndex(index);
     try {
-      const currentDesc = char.description;
-
       // Build context from other characters for relationship consistency
       const otherCharsContext = draft.characters
         .filter((c, i) => i !== index && c.name?.trim() && c.description?.trim())
@@ -391,14 +389,14 @@ ${e.content || ''}`)
 
       const modifiedDesc = await modifyCharacterDescription(
         char.name,
-        currentDesc,
+        currentDescription,
         instructions,
         otherCharsContext || undefined,
       );
 
       if (modifiedDesc && modifiedDesc.trim()) {
         // Save current to history before replacing
-        addToCharacterHistory(char.id, currentDesc, false);
+        addToCharacterHistory(char.id, currentDescription, false);
         // Save modified result to history
         addToCharacterHistory(char.id, modifiedDesc.trim(), false);
         // Update character

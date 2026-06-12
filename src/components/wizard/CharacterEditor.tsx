@@ -20,7 +20,7 @@ interface CharacterEditorProps {
   onUpdate: (updates: Partial<WizardCharacter>) => void;
   onRemove: () => void;
   onGenerate: (index: number) => void;
-  onModify: (index: number, instructions: string) => void;
+  onModify: (index: number, instructions: string, currentDescription: string) => void;
   onPolishSelection: (index: number, selectedText: string, fullText: string) => void;
   canRemove: boolean;
   isGenerating: boolean;
@@ -92,9 +92,8 @@ export function CharacterEditor({
 
   const handleModify = () => {
     if (!modifyInstruction.trim() || isModifying) return;
-    // Sync current description first
-    onUpdate({ description: localDesc });
-    onModify(index, modifyInstruction.trim());
+    // Pass localDesc directly to avoid stale draft race condition
+    onModify(index, modifyInstruction.trim(), localDesc);
     setModifyInstruction('');
   };
 

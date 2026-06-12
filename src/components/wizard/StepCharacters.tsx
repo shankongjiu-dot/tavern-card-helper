@@ -22,7 +22,7 @@ interface StepCharactersProps {
   onRemove: (index: number) => void;
   onUpdate: (index: number, updates: Partial<WizardCharacter>) => void;
   onGenerateCharacter: (index: number) => void;
-  onModifyCharacter: (index: number, instructions: string) => void;
+  onModifyCharacter: (index: number, instructions: string, currentDescription: string) => void;
   onPolishSelection: (index: number, selectedText: string, fullText: string) => void;
   onEntriesUpdate: (entries: LorebookEntry[]) => void;
   generatingIndex: number | null;
