@@ -315,55 +315,78 @@ ${e.content || ''}`)
     let successCount = 0;
     let errorCount = 0;
 
-    for (let i = 0; i < toGenerate.length; i++) {
-      const { char, index } = toGenerate[i];
-      setBatchProgress({ current: i + 1, total: toGenerate.length });
+    try {
+      for (let i = 0; i < toGenerate.length; i++) {
+        const { char, index } = toGenerate[i];
+        setBatchProgress({ current: i + 1, total: toGenerate.length });
+        setGeneratingIndex(index); // Show loading on individual character editor
 
-      try {
-        const hint = char.description || '';
+        try {
+          const hint = char.description || '';
 
-        // Save current description as original if this is the first generation
-        const existingHistory = characterHistory[char.id] || [];
-        if (existingHistory.length === 0 && hint.trim()) {
-          addToCharacterHistory(char.id, hint, true);
-        }
-
-        // Build context from ALL other characters, using locally tracked
-        // generated descriptions (which include results from earlier in this loop)
-        const otherCharsContext = draft.characters
-          .filter((c, ci) => ci !== index && c.name?.trim())
-          .map(c => {
-            // Prefer the latest generated description from our local tracker
-            const desc = generatedDescriptions.get(c.id) || c.description || '';
-            return desc.trim() ? `### ${c.name}\n${desc.slice(0, 2000)}` : null;
-          })
-          .filter((s): s is string => s !== null)
-          .join('\n\n');
-
-        const result = await generateCharacterParsedStreaming(
-          char.name,
-          hint,
-          () => {},
-          otherCharsContext || undefined,
-        );
-        if (typeof result === 'object' && result !== null) {
-          const parsed = result as Record<string, unknown>;
-          if (parsed.description) {
-            const newDesc = parsed.description as string;
-            addToCharacterHistory(char.id, newDesc, false);
-            updateCharacter(index, { description: newDesc });
-            // Store in local tracker for subsequent characters in this batch
-            generatedDescriptions.set(char.id, newDesc);
+          // Save current description as original if this is the first generation
+          const existingHistory = characterHistory[char.id] || [];
+          if (existingHistory.length === 0 && hint.trim()) {
+            addToCharacterHistory(char.id, hint, true);
           }
+
+          // Build context from ALL other characters, using locally tracked
+          // generated descriptions (which include results from earlier in this loop)
+          const otherCharsContext = draft.characters
+            .filter((c, ci) => ci !== index && c.name?.trim())
+            .map(c => {
+              // Prefer the latest generated description from our local tracker
+              const desc = generatedDescriptions.get(c.id) || c.description || '';
+              return desc.trim() ? `### ${c.name}\n${desc.slice(0, 2000)}` : null;
+            })
+            .filter((s): s is string => s !== null)
+            .join('\n\n');
+
+          console.log(`[批量生成] 开始生成角色 ${i + 1}/${toGenerate.length}: ${char.name}`);
+
+          const result = await generateCharacterParsedStreaming(
+            char.name,
+            hint,
+            () => {},
+            otherCharsContext || undefined,
+          );
+
+          console.log(`[批量生成] 角色 ${char.name} 生成完成, result type:`, typeof result, result ? 'truthy' : 'falsy');
+
+          if (result && typeof result === 'object') {
+            const parsed = result as Record<string, unknown>;
+            if (parsed.description) {
+              const newDesc = parsed.description as string;
+              addToCharacterHistory(char.id, newDesc, false);
+              updateCharacter(index, { description: newDesc });
+              // Store in local tracker for subsequent characters in this batch
+              generatedDescriptions.set(char.id, newDesc);
+              console.log(`[批量生成] 角色 ${char.name} 描述已更新 (${newDesc.length} chars)`);
+            } else {
+              console.warn(`[批量生成] 角色 ${char.name} 返回结果无 description:`, result);
+            }
+          }
+          successCount++;
+        } catch (err: unknown) {
+          errorCount++;
+          const msg = err instanceof Error ? err.message : '未知错误';
+          console.error(`[批量生成] 角色 ${char.name} 生成失败:`, err);
+          addToast('error', `「${char.name}」生成失败：${msg}`);
+        } finally {
+          setGeneratingIndex(null);
         }
-        successCount++;
-      } catch (err: unknown) {
-        errorCount++;
-        const msg = err instanceof Error ? err.message : '未知错误';
-        addToast('error', `「${char.name}」生成失败：${msg}`);
+
+        // Small delay between API calls to avoid rate limiting
+        if (i < toGenerate.length - 1) {
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
+    } catch (unexpectedErr) {
+      console.error('[批量生成] 意外错误，循环中断:', unexpectedErr);
+      addToast('error', '批量生成意外中断，请查看控制台');
     }
 
+    setGeneratingIndex(null);
     setBatchGenerating(false);
     setBatchProgress({ current: 0, total: 0 });
 
