@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Button } from '../shared/Button';
 import { useToast } from '../shared/Toast';
+import { AIProgressPanel, type AIProgressStatus } from '../shared/AIProgressPanel';
 import { LorebookEntryEditor, type EntryExpandLevel } from './LorebookEntryEditor';
 import { AIGeneratePanel } from './AIGeneratePanel';
 import { OrganizePreviewTable } from './OrganizePreviewTable';
@@ -41,6 +42,9 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
   // AI key generation state
   const [generatingKeys, setGeneratingKeys] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  // Streaming progress
+  const [aiStatus, setAiStatus] = useState<AIProgressStatus>('idle');
+  const [streamText, setStreamText] = useState('');
   // AI expand state
   const [expandingIndex, setExpandingIndex] = useState<number | null>(null);
   // Collapse state: Map of entry ID → expand level
@@ -86,6 +90,8 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
 
   const handleBatchGenerate = async () => {
     setGenerating(true);
+    setAiStatus('generating');
+    setStreamText('');
     const consistencyRules = [
       worldRules,
       existingWorldbookContext ? `已有世界书（必须保持一致，不要冲突；新条目要补充空白、避免重复）：\n${existingWorldbookContext}` : '',
@@ -101,8 +107,22 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
           const batchSize = Math.min(remaining, 5);
           batchIndex++;
           const existingTitles = allSkeletons.map((s) => s.comment).join('、');
+          if (remaining < skeletonCount) {
+            setStreamText(prev => prev + `\n\n── 第 ${batchIndex} 批 (${remaining} 条) ──\n`);
+          }
           const skeletons = await generateLorebookSkeletonStreaming(
-            cardName, characterSummaries, topic, batchSize, existingTitles, () => {}, consistencyRules || undefined,
+            cardName, characterSummaries, topic, batchSize, existingTitles,
+            (_chunk, fullText) => setStreamText(prev => {
+              // Replace current batch's streaming portion
+              const lastMarker = prev.lastIndexOf('── 第');
+              if (lastMarker >= 0) {
+                const before = prev.slice(0, lastMarker);
+                const markerLine = prev.slice(lastMarker).split('\n')[0];
+                return before + markerLine + '\n' + fullText;
+              }
+              return fullText;
+            }),
+            consistencyRules || undefined,
           );
           allSkeletons = [...allSkeletons, ...skeletons];
           remaining -= batchSize;
@@ -133,8 +153,12 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
         });
         addToast('success', `已生成 ${newEntries.length} 条骨架，点击「✨ AI 展开」逐条扩展`);
       } else {
-        // ── Full mode: original behavior ──
-        const result = await generateLorebookParsedStreaming(cardName, characterSummaries, topic, () => {}, consistencyRules || undefined, nsfw);
+        // ── Full mode: streaming with live preview ──
+        const result = await generateLorebookParsedStreaming(
+          cardName, characterSummaries, topic,
+          (_chunk, fullText) => setStreamText(fullText),
+          consistencyRules || undefined, nsfw,
+        );
         if (Array.isArray(result) && result.length > 0) {
           const newEntries = result.map((item) => {
             const base = createEmptyLorebookEntry();
@@ -175,8 +199,11 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
           });
         }
       }
+      setAiStatus('done');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '未知错误';
+      setAiStatus('error');
+      setStreamText(msg);
       addToast('error', `世界书生成失败：${msg}`);
     } finally {
       setGenerating(false);
@@ -449,6 +476,18 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
         nsfw={nsfw}
         onNsfwChange={onNsfwChange}
       />
+
+      {/* Streaming progress panel */}
+      {aiStatus !== 'idle' && (
+        <div className="mb-6">
+          <AIProgressPanel
+            status={aiStatus}
+            text={streamText}
+            title={skeletonMode ? 'AI 骨架生成' : 'AI 世界书生成'}
+            onClear={() => { setAiStatus('idle'); setStreamText(''); }}
+          />
+        </div>
+      )}
 
       {entries.length === 0 && (
         <div className="text-center py-12 text-slate-500 border border-dashed border-slate-700 rounded-xl">
