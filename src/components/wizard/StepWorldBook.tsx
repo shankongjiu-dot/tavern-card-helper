@@ -86,9 +86,19 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
 
   const handleBatchGenerate = async () => {
     setGenerating(true);
+    // Cap total rules context to prevent exceeding the model's context window.
+    // User's own worldRules are always kept in full; existing worldbook entries are truncated.
+    const MAX_RULES_CHARS = 4000;
+    const worldRulesPart = worldRules.trim();
+    const wbBudget = Math.max(0, MAX_RULES_CHARS - worldRulesPart.length - 200); // 200 chars for labels/spacing
+    const wbText = existingWorldbookContext
+      ? (existingWorldbookContext.length > wbBudget
+          ? existingWorldbookContext.slice(0, wbBudget) + '\n...(已有世界书内容过长，已截断)'
+          : existingWorldbookContext)
+      : '';
     const consistencyRules = [
-      worldRules,
-      existingWorldbookContext ? `已有世界书（必须保持一致，不要冲突；新条目要补充空白、避免重复）：\n${existingWorldbookContext}` : '',
+      worldRulesPart,
+      wbText ? `已有世界书（必须保持一致，不要冲突；新条目要补充空白、避免重复）：\n${wbText}` : '',
     ].filter(Boolean).join('\n\n');
     try {
       if (skeletonMode) {
@@ -192,6 +202,9 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
 
     setExpandingIndex(index);
     try {
+      const expandContext = existingWorldbookContext
+        ? `${characterSummaries}\n\n已有世界书（必须保持一致）：\n${existingWorldbookContext.slice(0, 3000)}${existingWorldbookContext.length > 3000 ? '\n...(已截断)' : ''}`
+        : characterSummaries;
       const result = await expandLorebookEntry(
         {
           comment: entry.comment || entry.name || '',
@@ -200,9 +213,7 @@ export function StepWorldBook({ entries, cardName, characterSummaries, existingW
           strategy: entry.constant ? 'constant' : 'selective',
           position: entry.insertion_order,
         },
-        existingWorldbookContext
-          ? `${characterSummaries}\n\n已有世界书（必须保持一致）：\n${existingWorldbookContext}`
-          : characterSummaries,
+        expandContext,
         undefined,
         entry.expandNsfw,
       );
