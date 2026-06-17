@@ -308,7 +308,7 @@ export const EXPAND_ENTRY_PROMPT = (
 策略: ${entry.strategy}
 触发词: ${entry.keys.join(',')}
 内容: ${entry.content}
-${characterContext ? `\n【角色上下文】：\n${characterContext.substring(0, 800)}` : ''}${nsfwBlock}
+${characterContext ? `\n【角色上下文】：\n${characterContext.substring(0, 3000)}` : ''}${nsfwBlock}
 
 【任务】：扩写/重写。输出JSON：
 { "comment": "标题", "content": "详细设定（至少350字，使用键值对和列表格式，写得详细不要节省篇幅）", "keys": ["触发词", "2-5个"], "strategy": "selective 或 constant", "position": ${entry.position} }

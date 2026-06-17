@@ -347,7 +347,7 @@ export function createEmptyDraft(): WizardDraft {
 
     // Character Book-level settings
     bookScanDepth: 200,
-    bookTokenBudget: 500,
+    bookTokenBudget: 1500,
     bookRecursiveScanning: false,
     worldbookNsfw: false,
 
