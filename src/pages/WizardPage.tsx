@@ -290,9 +290,7 @@ ${e.content || ''}`)
         const parsed = result as Record<string, unknown>;
         const newDesc = (parsed.description as string)?.trim();
         if (newDesc && newDesc.length > 20) {
-          // Save AI result to history
-          addToCharacterHistory(char.id, newDesc, false);
-          // Update character description
+          // Update character description (fills the text field; pre-generation content already saved to history above)
           updateCharacter(index, { description: newDesc });
           // Sync linked world book entries immediately so the preview stays current
           injectCharacterEntries();
@@ -387,7 +385,7 @@ ${e.content || ''}`)
             const parsed = result as Record<string, unknown>;
             const newDesc = (parsed.description as string)?.trim();
             if (newDesc && newDesc.length > 20) {
-              addToCharacterHistory(char.id, newDesc, false);
+              // Update character description (pre-generation content already saved to history above)
               updateCharacter(index, { description: newDesc });
               // Store in local tracker for subsequent characters in this batch
               generatedDescriptions.set(char.id, newDesc);
