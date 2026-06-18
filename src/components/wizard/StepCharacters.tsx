@@ -14,6 +14,7 @@ import { TextArea } from '../shared/TextArea';
 import { Button } from '../shared/Button';
 import type { WizardCharacter, LorebookEntry } from '../../constants/defaults';
 import type { CharacterVersion } from '../../pages/WizardPage';
+import type { MutableRefObject } from 'react';
 
 interface StepCharactersProps {
   characters: WizardCharacter[];
@@ -31,6 +32,7 @@ interface StepCharactersProps {
   onSelectVersion: (charIndex: number, charId: string, versionId: string) => void;
   onDeleteVersion: (charId: string, versionId: string) => void;
   onSaveVersion: (charId: string, content: string) => void;
+  streamingChunkCallbackRef: MutableRefObject<((chunk: string, fullText: string) => void) | null>;
 }
 
 export function StepCharacters({
@@ -49,6 +51,7 @@ export function StepCharacters({
   onSelectVersion,
   onDeleteVersion,
   onSaveVersion,
+  streamingChunkCallbackRef,
 }: StepCharactersProps) {
   const lastEditorRef = useRef<HTMLDivElement>(null);
 
@@ -119,6 +122,7 @@ export function StepCharacters({
               onSelectVersion={(versionId) => onSelectVersion(i, char.id, versionId)}
               onDeleteVersion={(versionId) => onDeleteVersion(char.id, versionId)}
               onSaveVersion={(content) => onSaveVersion(char.id, content)}
+              streamingChunkCallbackRef={streamingChunkCallbackRef}
             />
           </div>
         ))}

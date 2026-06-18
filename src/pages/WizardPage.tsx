@@ -125,6 +125,9 @@ export function WizardPage() {
   const { generateCharacterParsedStreaming, modifyCharacterDescription, polishSelection } = useAIGenerate();
   const { addToast } = useToast();
 
+  // ── Streaming chunk callback — set by CharacterEditor before generation starts ──
+  const streamingChunkCallbackRef = useRef<((chunk: string, fullText: string) => void) | null>(null);
+
   // ── Character generation history ──────────────────────────────────────
   const [characterHistory, setCharacterHistory] = useState<Record<string, CharacterVersion[]>>({});
   // Keep a ref in sync so async callbacks always read the latest history
@@ -281,7 +284,9 @@ ${e.content || ''}`)
       const result = await generateCharacterParsedStreaming(
         char.name,
         hint,
-        () => {},
+        (chunk, fullText) => {
+          streamingChunkCallbackRef.current?.(chunk, fullText);
+        },
         otherCharsContext || undefined,
         char.alignment || undefined,
         char.nsfw ?? false,
@@ -374,7 +379,9 @@ ${e.content || ''}`)
           const result = await generateCharacterParsedStreaming(
             char.name,
             hint,
-            () => {},
+            (chunk, fullText) => {
+              streamingChunkCallbackRef.current?.(chunk, fullText);
+            },
             otherCharsContext || undefined,
             char.alignment || undefined,
             char.nsfw ?? false,
@@ -546,6 +553,7 @@ ${e.content || ''}`)
             onSelectVersion={selectCharacterVersion}
             onDeleteVersion={deleteCharacterVersion}
             onSaveVersion={saveCurrentAsVersion}
+            streamingChunkCallbackRef={streamingChunkCallbackRef}
           />
         );
       case 3:

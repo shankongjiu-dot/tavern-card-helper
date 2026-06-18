@@ -14,6 +14,7 @@ import { Button } from '../shared/Button';
 import { CHARACTER_ALIGNMENTS } from '../../constants/defaults';
 import type { WizardCharacter } from '../../constants/defaults';
 import type { CharacterVersion } from '../../pages/WizardPage';
+import type { MutableRefObject } from 'react';
 
 interface CharacterEditorProps {
   character: WizardCharacter;
@@ -30,6 +31,7 @@ interface CharacterEditorProps {
   onSelectVersion: (versionId: string) => void;
   onDeleteVersion: (versionId: string) => void;
   onSaveVersion: (content: string) => void;
+  streamingChunkCallbackRef: MutableRefObject<((chunk: string, fullText: string) => void) | null>;
 }
 
 function formatTime(timestamp: number): string {
@@ -52,6 +54,7 @@ export function CharacterEditor({
   onSelectVersion,
   onDeleteVersion,
   onSaveVersion,
+  streamingChunkCallbackRef,
 }: CharacterEditorProps) {
   const [localName, setLocalName] = useState(character.name ?? '');
   const [localDesc, setLocalDesc] = useState(character.description ?? '');
@@ -60,7 +63,52 @@ export function CharacterEditor({
   const [showModifyPanel, setShowModifyPanel] = useState(false);
   const [modifyInstruction, setModifyInstruction] = useState('');
   const [selectedText, setSelectedText] = useState('');
+  const [streamingText, setStreamingText] = useState('');
   const descTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const streamPreviewRef = useRef<HTMLDivElement | null>(null);
+
+  // Streaming chunk handler — shared ref, WizardPage reads this during generation
+  // Throttle streaming re-renders to ~1 frame using requestAnimationFrame
+  const pendingChunkRef = useRef('');
+  const rafPendingRef = useRef(false);
+  const flushChunks = useCallback(() => {
+    setStreamingText(pendingChunkRef.current);
+    rafPendingRef.current = false;
+  }, []);
+
+  const wrappedOnGenerate = useCallback(() => {
+    // Reset streaming state
+    pendingChunkRef.current = '';
+    setStreamingText('');
+
+    // Set up the chunk handler on the shared ref — WizardPage's onChunk callback
+    // will call this, updating the local streaming preview in real-time
+    streamingChunkCallbackRef.current = (_chunk: string, fullText: string) => {
+      pendingChunkRef.current = fullText;
+      if (!rafPendingRef.current) {
+        rafPendingRef.current = true;
+        requestAnimationFrame(flushChunks);
+      }
+    };
+
+    onGenerate(index);
+  }, [onGenerate, index, flushChunks, streamingChunkCallbackRef]);
+
+  // Clear streaming state and chunk handler when generation finishes
+  useEffect(() => {
+    if (!isGenerating) {
+      streamingChunkCallbackRef.current = null;
+      setStreamingText('');
+      pendingChunkRef.current = '';
+    }
+  }, [isGenerating, streamingChunkCallbackRef]);
+
+  // Auto-scroll streaming preview to bottom
+  useEffect(() => {
+    if (streamingText && streamPreviewRef.current) {
+      streamPreviewRef.current.scrollTop = streamPreviewRef.current.scrollHeight;
+    }
+  }, [streamingText]);
 
   useEffect(() => { setLocalName(character.name ?? ''); }, [character.name]);
   useEffect(() => { setLocalDesc(character.description ?? ''); }, [character.description]);
@@ -117,7 +165,7 @@ export function CharacterEditor({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => onGenerate(index)}
+              onClick={wrappedOnGenerate}
               disabled={isGenerating}
             >
               {isGenerating ? '生成中...' : 'AI 生成'}
@@ -233,6 +281,36 @@ export function CharacterEditor({
           </div>
         )}
       </div>
+
+      {/* AI Streaming Preview — shows raw output as it arrives */}
+      {(isGenerating || streamingText) && (
+        <div className="rounded-lg border border-purple-700/40 bg-purple-950/10 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-purple-300 flex items-center gap-2">
+              {isGenerating && (
+                <span className="inline-block w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+              )}
+              AI 生成实时输出
+            </h4>
+            <span className="text-[10px] text-slate-500">{streamingText.length} 字</span>
+          </div>
+          <div
+            ref={streamPreviewRef}
+            className="max-h-[300px] overflow-y-auto rounded bg-slate-950/60 p-3 border border-slate-800"
+          >
+            {streamingText ? (
+              <pre className="text-[11px] text-purple-200/80 font-mono whitespace-pre-wrap leading-relaxed">
+                {streamingText}
+              </pre>
+            ) : (
+              <p className="text-[11px] text-slate-500 italic">等待 AI 响应...</p>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-500 mt-2">
+            生成完成后，解析结果将自动填入上方文本框
+          </p>
+        </div>
+      )}
 
       {/* Action buttons row */}
       {hasDescription && (
