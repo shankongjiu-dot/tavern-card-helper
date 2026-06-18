@@ -127,6 +127,9 @@ export function WizardPage() {
 
   // ── Character generation history ──────────────────────────────────────
   const [characterHistory, setCharacterHistory] = useState<Record<string, CharacterVersion[]>>({});
+  // Keep a ref in sync so async callbacks always read the latest history
+  const characterHistoryRef = useRef<Record<string, CharacterVersion[]>>({});
+  useEffect(() => { characterHistoryRef.current = characterHistory; }, [characterHistory]);
 
   /** Get history for a specific character */
   const getCharacterHistory = useCallback((charId: string): CharacterVersion[] => {
@@ -255,10 +258,18 @@ ${e.content || ''}`)
     try {
       const hint = char.description || '';
 
-      // Save current description as original if this is the first generation
-      const existingHistory = characterHistory[char.id] || [];
-      if (existingHistory.length === 0 && hint.trim()) {
-        addToCharacterHistory(char.id, hint, true);
+      // Use ref to read latest history (avoids stale closure)
+      const existingHistory = characterHistoryRef.current[char.id] || [];
+      if (existingHistory.length === 0) {
+        // First generation: save current input as "original"
+        if (hint.trim()) {
+          addToCharacterHistory(char.id, hint, true);
+        }
+      } else {
+        // Subsequent generations: save current content before replacing
+        if (hint.trim() && hint !== existingHistory[existingHistory.length - 1].content) {
+          addToCharacterHistory(char.id, hint, false);
+        }
       }
 
       // Build context from other already-created characters
@@ -333,10 +344,18 @@ ${e.content || ''}`)
         try {
           const hint = char.description || '';
 
-          // Save current description as original if this is the first generation
-          const existingHistory = characterHistory[char.id] || [];
-          if (existingHistory.length === 0 && hint.trim()) {
-            addToCharacterHistory(char.id, hint, true);
+          // Use ref to read latest history (avoids stale closure in async loop)
+          const existingHistory = characterHistoryRef.current[char.id] || [];
+          if (existingHistory.length === 0) {
+            // First generation: save current input as "original"
+            if (hint.trim()) {
+              addToCharacterHistory(char.id, hint, true);
+            }
+          } else {
+            // Subsequent generations: save current content before replacing
+            if (hint.trim() && hint !== existingHistory[existingHistory.length - 1].content) {
+              addToCharacterHistory(char.id, hint, false);
+            }
           }
 
           // Build context from ALL other characters, using locally tracked
