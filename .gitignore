@@ -48,3 +48,4 @@ st-prompt-template/
 stagedog-tavern-helper-template/
 
 .vercel
+.env*

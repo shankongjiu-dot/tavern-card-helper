@@ -518,7 +518,7 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
     // 它们的内容直接内联在 extensions.tavern_helper.scripts 里（酒馆助手脚本区）
     // 状态栏 HTML 通过 regex_scripts 替换 <StatusPlaceHolderImpl/> 占位符，见 buildCardExtensions
 
-    // 变量列表.txt — Variable list
+    // 变量列表 — Variable list
     if (bundle.variableList) {
       mvuEntryOffset++;
       entries.push({
@@ -526,7 +526,7 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
         keys: [],
         secondary_keys: [],
         content: bundle.variableList,
-        name: '变量列表.txt',
+        name: '变量列表',
         enabled: true,
         insertion_order: 2001,
         case_sensitive: false,
@@ -544,7 +544,7 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
       });
     }
 
-    // 变量输出格式.txt — Variable output format
+    // [mvu_update]变量输出格式 — Variable output format
     if (bundle.variableOutputFormat) {
       mvuEntryOffset++;
       entries.push({
@@ -552,7 +552,7 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
         keys: [],
         secondary_keys: [],
         content: bundle.variableOutputFormat,
-        name: '变量输出格式.txt',
+        name: '[mvu_update]变量输出格式',
         enabled: true,
         insertion_order: 2002,
         case_sensitive: false,
@@ -709,7 +709,7 @@ function reconstructMvuConfig(
   if (!ext.mvu_enabled) return undefined;
 
   // Extract MVU content from lorebook entries by name
-  const mvuEntryNames = ['[InitVar]请勿打开', '[mvu_update]变量更新规则', 'EJS预处理', '变量列表.txt', '变量输出格式.txt'];
+  const mvuEntryNames = ['[InitVar]请勿打开', '[mvu_update]变量更新规则', 'EJS预处理', '变量列表', '变量列表.txt', '[mvu_update]变量输出格式', '变量输出格式.txt'];
   const mvuEntries = rawEntries.filter(e => mvuEntryNames.includes((e.name as string) || ''));
 
   let schemaTsContent = '';

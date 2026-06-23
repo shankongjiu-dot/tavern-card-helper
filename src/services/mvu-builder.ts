@@ -268,7 +268,7 @@ function toYaml(obj: Record<string, unknown>, indent = 0): string {
   return lines.join('\n');
 }
 
-function formatYamlScalar(value: unknown): string {
+export function formatYamlScalar(value: unknown): string {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return String(value);
@@ -287,10 +287,6 @@ function formatYamlScalar(value: unknown): string {
  */
 export function buildUpdateRulesYaml(rules: MvuUpdateRule[]): string {
   const lines: string[] = [
-    '# MVU 变量更新规则',
-    '# 告诉 AI 如何更新变量（自明变量省略规则，同类变量用 ${key1|key2} 合并）',
-    '# 特殊前缀 _ 和 $ 的变量不写更新规则',
-    '',
     '变量更新规则:',
   ];
 
@@ -446,19 +442,61 @@ export function buildVariableList(sections: MvuSchemaSection[]): string {
 
 /**
  * Build 变量输出格式.txt (output format for SillyTavern).
+ *
+ * Matches the reference card convention (e.g. 「银帷骑士团」):
+ *   - <update_variable_rules>: instruct AI to emit <UpdateVariable> JSON Patch blocks
+ *   - <status_bar_rule>: instruct AI to append <StatusPlaceHolderImpl/> at the end of every reply
+ *   - <status_current_variable>: show current stat_data for reference
  */
-export function buildVariableOutputFormat(sections: MvuSchemaSection[]): string {
-  const lines: string[] = ['当前变量状态：', ''];
+export function buildVariableOutputFormat(sections: MvuSchemaSection[], rules: MvuUpdateRule[] = []): string {
+  const variableListLines: string[] = [];
   for (const section of sections) {
-    lines.push(`【${section.name}】`);
+    variableListLines.push(`  ${section.name}:`);
     for (const v of section.variables) {
       if (v.prefix === '$') continue;
-      const key = v.path.split('.').pop() || v.path;
-      lines.push(`${key}: {${v.path}}`);
+      variableListLines.push(`    ${v.path}: ${formatYamlScalar(v.initialValue ?? '')}`);
     }
-    lines.push('');
   }
-  return lines.join('\n');
+
+  const rulesYaml = rules.length > 0 ? buildUpdateRulesYaml(rules) : '变量更新规则: {}';
+
+  return `---
+<update_variable_rules>
+rule:
+  - you must output the update analysis and the actual update commands at once in the end of the next reply
+  - 'the update commands must strictly follow the **JSON Patch (RFC 6902)** standard, but can only use the following operations: \`replace\` (replace the value of existing paths), \`add\` (only used to insert new items into an object or array), \`remove\`; that is, the output must be a valid JSON array containing operation objects'
+format: |-
+  <UpdateVariable>
+  <Analysis>$(IN ENGLISH, no more than 80 words)
+  - \${calculate time passed: ...}
+  - \${decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: yes/no}
+  - \${analyze every variable based on its corresponding \`check\`, according only to current reply instead of previous plots: ...}
+  - \${if the value is number, please write down the calculation: old_value (X) + delta (Y) = new_value (Z)}
+  </Analysis>
+  <JSONPatch>
+  [
+    { "op": "replace", "path": "/stat_data/\${section/variable}", "value": \${new_value} },
+    { "op": "add", "path": "/stat_data/\${section/object}/newKey", "value": \${content} },
+    { "op": "remove", "path": "/stat_data/\${section/array}/0" },
+    ...
+  ]
+  </JSONPatch>
+  </UpdateVariable>
+${rulesYaml}
+</update_variable_rules>
+---
+<status_bar_rule>
+- after the <UpdateVariable> block, on a new line at the very end of every reply, output the literal token \`<StatusPlaceHolderImpl/>\` exactly as written
+- this token renders the status bar; never omit it, never translate or modify it
+</status_bar_rule>
+---
+<status_current_variable>
+当前变量状态:
+${variableListLines.join('\n')}
+
+{{format_message_variable::stat_data}}
+</status_current_variable>
+`;
 }
 
 /**
@@ -604,7 +642,7 @@ export function buildMvuScriptBundle(mvu: MvuConfig): {
   return {
     zodTxt: buildZodTxt(schemaTsContent),
     variableList: buildVariableList(mvu.schemaSections),
-    variableOutputFormat: buildVariableOutputFormat(mvu.schemaSections),
+    variableOutputFormat: buildVariableOutputFormat(mvu.schemaSections, mvu.updateRules),
     ejsPreprocess: mvu.ejsPreprocessContent || buildEjsPreprocess([], mvu.schemaSections),
     statusBarHtml: mvu.statusBarHtml,
     initvarYaml,
