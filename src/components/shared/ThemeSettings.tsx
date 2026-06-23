@@ -13,9 +13,10 @@ import {
   INPUT_BG_PRESETS,
   INPUT_BORDER_PRESETS,
   CARD_BG_PRESETS,
+  THEME_PRESETS,
   type ThemeSettings as ThemeSettingsType,
 } from '../../services/theme-service';
-import { getStoredBackground, applyBackground } from '../../services/background-service';
+import { getStoredBackground, applyBackground, setBackground } from '../../services/background-service';
 import { useTranslation } from '../../i18n/I18nContext';
 
 export function ThemeSettings({ sidebarOpen }: { sidebarOpen?: boolean }) {
@@ -41,6 +42,12 @@ export function ThemeSettings({ sidebarOpen }: { sidebarOpen?: boolean }) {
     const reset = resetTheme();
     setSettings(reset);
     applyBackground(getStoredBackground());
+  };
+
+  const handleApplyPreset = (preset: typeof THEME_PRESETS[number]) => {
+    const updated = saveThemeSettings(preset.settings);
+    setSettings(updated);
+    setBackground(preset.background);
   };
 
   return (
@@ -76,6 +83,40 @@ export function ThemeSettings({ sidebarOpen }: { sidebarOpen?: boolean }) {
             </button>
           </div>
           <div className="space-y-3">
+            {/* Preset Themes */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-2">{t('theme.presets')}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {THEME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => handleApplyPreset(preset)}
+                    className="group relative rounded-lg overflow-hidden border border-slate-600 hover:border-slate-400 transition-all hover:scale-[1.03] active:scale-[0.98]"
+                    title={preset.name}
+                  >
+                    <img
+                      src={preset.background}
+                      alt={preset.name}
+                      className="w-full h-16 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div
+                      className="absolute bottom-1 left-1 right-1 text-[10px] font-medium text-white truncate text-center"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+                    >
+                      {preset.name}
+                    </div>
+                    {/* Color swatches */}
+                    <div className="absolute top-1 right-1 flex gap-0.5">
+                      <span className="w-2.5 h-2.5 rounded-full border border-white/30" style={{ backgroundColor: preset.settings.primaryColor }} />
+                      <span className="w-2.5 h-2.5 rounded-full border border-white/30" style={{ backgroundColor: preset.settings.cardBgColor }} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Section 1: Appearance */}
             <div>
               <button

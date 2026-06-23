@@ -128,6 +128,75 @@ export const CARD_BG_PRESETS = [
 ];
 
 /**
+ * Full theme presets — each bundles a wallpaper background + coordinated UI colors.
+ * Background images are served from /themes/*.png (public/ directory).
+ */
+export interface ThemePreset {
+  id: string;
+  name: string;
+  /** Relative URL to background image in public/themes/ */
+  background: string;
+  settings: ThemeSettings;
+}
+
+export const THEME_PRESETS: ThemePreset[] = [
+  {
+    id: 'pastoral',
+    name: '清新田园',
+    background: '/themes/pastoral.png',
+    settings: {
+      bgOverlayOpacity: 18,
+      primaryColor: '#4ade80',
+      surfaceOpacity: 30,
+      blurIntensity: 4,
+      textColor: '#fefce8',
+      textShadow: 1,
+      textShadowColor: '#064e3b',
+      cardShadow: 6,
+      inputBgColor: '#022c22',
+      inputBorderColor: '#166534',
+      cardBgColor: '#064e3b',
+    },
+  },
+  {
+    id: 'summer-campus',
+    name: '夏日校园',
+    background: '/themes/summer-campus.png',
+    settings: {
+      bgOverlayOpacity: 25,
+      primaryColor: '#fbbf24',
+      surfaceOpacity: 28,
+      blurIntensity: 5,
+      textColor: '#fffbeb',
+      textShadow: 2,
+      textShadowColor: '#451a03',
+      cardShadow: 8,
+      inputBgColor: '#1c1410',
+      inputBorderColor: '#b45309',
+      cardBgColor: '#451a03',
+    },
+  },
+  {
+    id: 'silhouette-sky',
+    name: '剪影天空',
+    background: '/themes/silhouette-sky.png',
+    settings: {
+      bgOverlayOpacity: 40,
+      primaryColor: '#ea580c',
+      surfaceOpacity: 35,
+      blurIntensity: 6,
+      textColor: '#e2e8f0',
+      textShadow: 2,
+      textShadowColor: '#1e293b',
+      cardShadow: 5,
+      inputBgColor: '#0f172a',
+      inputBorderColor: '#475569',
+      cardBgColor: '#1e293b',
+    },
+  },
+];
+
+/**
  * Get current theme settings from localStorage.
  */
 export function getThemeSettings(): ThemeSettings {
