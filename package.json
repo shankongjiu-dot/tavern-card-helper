@@ -26,6 +26,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "concurrently": "^10.0.1",
     "cors": "^2.8.6",
     "dexie": "^4.4.3",

@@ -4,6 +4,7 @@
  */
 import { lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AppShell } from './components/layout/AppShell';
 import { ToastProvider } from './components/shared/Toast';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
@@ -44,6 +45,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        <Analytics />
       </ErrorBoundary>
     </ToastProvider>
   );
