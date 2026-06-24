@@ -10,6 +10,7 @@ import {
   loadSavedPreset,
   clearSavedPreset,
   togglePresetPrompt,
+  resetToBuiltInPreset,
   type LoadedPreset,
 } from '../../services/preset-service';
 import { useTranslation } from '../../i18n/I18nContext';
@@ -46,6 +47,11 @@ export function PresetPanel() {
     setPreset(null);
   }, []);
 
+  const handleResetBuiltIn = useCallback(() => {
+    const loaded = resetToBuiltInPreset();
+    setPreset(loaded);
+  }, []);
+
   const handleToggle = useCallback((index: number) => {
     const updated = togglePresetPrompt(index);
     setPreset(updated);
@@ -76,9 +82,14 @@ export function PresetPanel() {
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-white">{t('preset.panelTitle')}</span>
           {preset && (
-            <span className="text-[10px] text-indigo-300 bg-indigo-900/30 px-1.5 py-0.5 rounded">
-              {t('preset.enabledRulesShort', { enabled: String(enabledCount), total: String(preset.prompts.length) })}
-            </span>
+            <>
+              <span className="text-[10px] text-indigo-300 bg-indigo-900/30 px-1.5 py-0.5 rounded">
+                {t('preset.enabledRulesShort', { enabled: String(enabledCount), total: String(preset.prompts.length) })}
+              </span>
+              {preset.isBuiltIn && (
+                <span className="text-[10px] text-emerald-300 bg-emerald-900/30 px-1.5 py-0.5 rounded">默认</span>
+              )}
+            </>
           )}
         </div>
         <div className="flex gap-2">
@@ -90,9 +101,13 @@ export function PresetPanel() {
           >
             {importing ? t('preset.importing') : preset ? t('preset.panelChange') : t('preset.panelImport')}
           </Button>
-          {preset && (
+          {preset ? (
             <Button variant="danger" size="sm" onClick={handleClear}>
               {t('preset.panelClear')}
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={handleResetBuiltIn}>
+              恢复默认
             </Button>
           )}
         </div>
@@ -114,8 +129,11 @@ export function PresetPanel() {
       {preset && (
         <div className="mt-2 space-y-1">
           <p className="text-[10px] text-slate-500">
-            {t('preset.panelSource', { fileName: preset.fileName, count: String(preset.prompts.length) })}
+            {preset.isBuiltIn ? '内置写卡模式预设' : t('preset.panelSource', { fileName: preset.fileName, count: String(preset.prompts.length) })}
           </p>
+          {preset.description && (
+            <p className="text-[10px] text-slate-400 mb-1">{preset.description}</p>
+          )}
           <div className="max-h-[200px] overflow-y-auto space-y-0.5">
             {preset.prompts.map((p, i) => (
               <label

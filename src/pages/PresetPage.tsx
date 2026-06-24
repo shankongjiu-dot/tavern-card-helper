@@ -9,6 +9,7 @@ import {
   loadSavedPreset,
   clearSavedPreset,
   togglePresetPrompt,
+  resetToBuiltInPreset,
   type LoadedPreset,
 } from '../services/preset-service';
 import { useTranslation } from '../i18n/I18nContext';
@@ -43,6 +44,11 @@ export function PresetPage() {
   const handleClear = useCallback(() => {
     clearSavedPreset();
     setPreset(null);
+  }, []);
+
+  const handleResetBuiltIn = useCallback(() => {
+    const loaded = resetToBuiltInPreset();
+    setPreset(loaded);
   }, []);
 
   const handleToggle = useCallback((index: number) => {
@@ -95,7 +101,7 @@ export function PresetPage() {
           <span className="text-lg transition-transform group-hover:rotate-12">📂</span>
           {importing ? t('preset.importing') : preset ? t('preset.importNew') : t('preset.importFile')}
         </Button>
-        {preset && (
+        {preset ? (
           <Button 
             variant="danger" 
             onClick={handleClear}
@@ -104,14 +110,32 @@ export function PresetPage() {
             <span className="mr-1 group-hover:animate-bounce">✕</span>
             {t('preset.clearPreset')}
           </Button>
+        ) : (
+          <Button 
+            variant="secondary" 
+            onClick={handleResetBuiltIn}
+            className="group hover:scale-105 transition-transform"
+          >
+            <span className="mr-1">✨</span>
+            恢复默认写卡模式
+          </Button>
         )}
         {preset && (
-          <span className="text-sm text-slate-400 animate-badge-pop">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-900/50 text-indigo-300">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              {t('preset.enabledCount', { enabled: String(enabledCount), total: String(preset.prompts.length) })}
+          <>
+            <span className="text-sm text-slate-400 animate-badge-pop">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-900/50 text-indigo-300">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                {t('preset.enabledCount', { enabled: String(enabledCount), total: String(preset.prompts.length) })}
+              </span>
             </span>
-          </span>
+            {preset.isBuiltIn && (
+              <span className="text-sm text-emerald-400 animate-badge-pop">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-900/50 text-emerald-300">
+                  ⭐ 默认写卡模式
+                </span>
+              </span>
+            )}
+          </>
         )}
       </div>
 
