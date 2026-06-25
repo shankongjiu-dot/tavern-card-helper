@@ -1,3 +1,5 @@
+import { MVU_LOREBOOK_ENTRY_NAMES } from '../constants/defaults';
+
 /**
  * Card Validator - validates a card against SillyTavern Character Card V2 spec.
  *
@@ -162,11 +164,15 @@ export function validateCard(card: Record<string, unknown>): ValidationResult {
       }
 
       // ── MVU entries validation ──────────────────────────────────────────
-      const mvuEntryNames = ['[InitVar]请勿打开', '[mvu_update]变量更新规则', 'EJS预处理', '变量列表.txt', '变量输出格式.txt'];
+      // MVU 相关警告只在卡片明确启用 MVU（extensions.mvu_enabled === true）时才会产生。
+      // 如果用户没有启用 MVU，即使世界书中残留 MVU 条目，也不应报 MVU 专用警告，
+      // 更不应要求安装 MVU 脚本/正则。
+      const ext = (data.extensions || {}) as Record<string, unknown>;
+      const mvuEnabled = ext.mvu_enabled === true;
       const mvuEntries = (charBook.entries as Record<string, unknown>[]).filter(e =>
-        mvuEntryNames.includes(e.name as string)
+        MVU_LOREBOOK_ENTRY_NAMES.includes(e.name as string)
       );
-      if (mvuEntries.length > 0) {
+      if (mvuEnabled && mvuEntries.length > 0) {
         // Check initvar exists
         const hasInitvar = mvuEntries.some(e => e.name === '[InitVar]请勿打开');
         if (!hasInitvar) {
@@ -186,7 +192,6 @@ export function validateCard(card: Record<string, unknown>): ValidationResult {
 
         // Check MVU scripts and regex scripts in extensions
         // SillyTavern / JS-Slash-Runner 要求 scripts 和 regex_scripts 都是数组
-        const ext = (data.extensions || {}) as Record<string, unknown>;
         const tavernHelper = ext.tavern_helper as Record<string, unknown> | undefined;
         const scripts = tavernHelper?.scripts as unknown[] | undefined;
         const hasMvuScript = Array.isArray(scripts) && scripts.some(

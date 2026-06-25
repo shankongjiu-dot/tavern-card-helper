@@ -21,7 +21,7 @@
  *     2. 对AI隐藏状态栏：把占位符从 prompt 中删除（promptOnly）
  *   first_mes 末尾自动追加占位符，保证开场消息也会渲染状态栏。
  */
-import { generateId, createEmptyMvuConfig } from '../constants/defaults';
+import { generateId, createEmptyMvuConfig, MVU_LOREBOOK_ENTRY_NAMES } from '../constants/defaults';
 import type { WizardDraft, LorebookEntry, LorebookPosition, MvuConfig } from '../constants/defaults';
 import { buildMvuScriptBundle } from './mvu-builder';
 
@@ -390,10 +390,15 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
   const description = '';
   const personality = '';
 
+  // MVU 未启用时，普通世界书条目中的 MVU 资产也应被过滤掉，避免污染未启用 MVU 的卡片。
+  const mvuEnabled = Boolean(draft.mvu?.enabled && (draft.mvu.schemaTsContent || draft.mvu.schemaSections.length > 0));
+
   // ── Build character_book entries (V2 CharacterBook format) ─────────────
   // V2 spec fields go directly on the entry.
   // SillyTavern runtime fields go in `extensions` (preserved by ST on import).
-  const entries = draft.lorebookEntries.map((entry, i) => ({
+  const entries = draft.lorebookEntries
+    .filter((entry) => mvuEnabled || !MVU_LOREBOOK_ENTRY_NAMES.includes(entry.name))
+    .map((entry, i) => ({
     id: i + 1,
     keys: entry.keys,
     secondary_keys: entry.secondary_keys || [],
@@ -432,7 +437,7 @@ export function assembleCard(draft: WizardDraft, existingId?: number) {
   // buildMvuScriptBundle 内部会兜底生成缺失的 schemaTs/initvar/updateRules
   let mvuEntryOffset = entries.length;
   let mvuBundle: ReturnType<typeof buildMvuScriptBundle> | null = null;
-  if (draft.mvu?.enabled && (draft.mvu.schemaTsContent || draft.mvu.schemaSections.length > 0)) {
+  if (mvuEnabled && draft.mvu) {
     const bundle = buildMvuScriptBundle(draft.mvu);
     mvuBundle = bundle;
 
@@ -721,8 +726,10 @@ function reconstructMvuConfig(
   if (!ext.mvu_enabled) return undefined;
 
   // Extract MVU content from lorebook entries by name
-  const mvuEntryNames = ['[InitVar]请勿打开', '[mvu_update]变量更新规则', 'EJS预处理', '变量列表', '变量列表.txt', 'MVU 变量列表', 'MVU 变量输出格式', '[mvu_update]变量输出格式', '变量输出格式.txt'];
-  const mvuEntries = rawEntries.filter(e => mvuEntryNames.includes((e.name as string) || '') || mvuEntryNames.includes((e.comment as string) || ''));
+  const mvuEntries = rawEntries.filter(
+    e => MVU_LOREBOOK_ENTRY_NAMES.includes((e.name as string) || '')
+      || MVU_LOREBOOK_ENTRY_NAMES.includes((e.comment as string) || '')
+  );
 
   let schemaTsContent = '';
   let initvarYamlContent = '';
@@ -769,6 +776,8 @@ function reconstructMvuConfig(
 export function cardToDraft(card: Record<string, unknown>): WizardDraft {
   const data = (card.data || card) as Record<string, unknown>;
   const meta = (card._meta || {}) as Record<string, unknown>;
+  const dataExt = (data.extensions || {}) as Record<string, unknown>;
+  const mvuEnabled = dataExt.mvu_enabled === true;
 
   // Reconstruct characters from _meta, description, or generated character entries
   let characters: WizardDraft['characters'] = [];
@@ -791,9 +800,12 @@ export function cardToDraft(card: Record<string, unknown>): WizardDraft {
     }];
   }
 
-  // Reconstruct lorebook entries from character_book
+  // Reconstruct lorebook entries from character_book.
+  // 如果卡片没有启用 MVU，丢弃 MVU 相关世界书条目，避免污染编辑器。
   const charBook = data.character_book as Record<string, unknown> | undefined;
-  const rawEntries = (charBook?.entries || []) as Array<Record<string, unknown>>;
+  const rawEntries = ((charBook?.entries || []) as Array<Record<string, unknown>>).filter(
+    (e) => mvuEnabled || !MVU_LOREBOOK_ENTRY_NAMES.includes((e.name as string) || '')
+  );
 
   if (characters.length === 0) {
     const generatedCharacterEntries = rawEntries.filter((e) => {

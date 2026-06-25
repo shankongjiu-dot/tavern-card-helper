@@ -219,6 +219,23 @@ export interface MvuConfig {
   statusBarStyle: string;
 }
 
+/**
+ * World book entry names that belong to the MVU system.
+ * When MVU is disabled these entries should not be exported or edited.
+ */
+export const MVU_LOREBOOK_ENTRY_NAMES: readonly string[] = [
+  '[InitVar]请勿打开',
+  '[mvu_update]变量更新规则',
+  'EJS预处理',
+  '变量列表',
+  '变量列表.txt',
+  '变量输出格式',
+  '变量输出格式.txt',
+  'MVU 变量列表',
+  'MVU 变量输出格式',
+  '[mvu_update]变量输出格式',
+];
+
 /** Wizard draft state shape (shared across pages, hooks, services) */
 export interface WizardDraft {
   cardName: string;
